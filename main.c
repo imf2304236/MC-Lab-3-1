@@ -13,6 +13,8 @@ void main(void) {
     int i;
     static unsigned char convInput;
 
+    configSys();
+
     while(1) {
         convInput = 0;    // Reset D/A Converter input byteword
 
