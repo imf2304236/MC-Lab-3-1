@@ -3,15 +3,30 @@
 
 void configSys(void);
 
-void displayValue(void);
+void displayValue(unsigned char);
 
 void configTimer(void);
 
 void wait30us(void);
 
-int main(void) {
+void main(void) {
+    int i;
+    static unsigned char convInput;
 
-    return 0;
+    while(1) {
+        convInput = 0;    // Reset D/A Converter input byteword
+
+        // Iterate from MSB to LSB of D/A Converter input
+        for (i=7; i!=-1; --i) {
+            while (GPIO_PORTD_AHB_DATA_R & 2ul);    // Wait while the Stop button is pressed
+            GPIO_PORTK_DATA_R = (convInput | (uint32_t)1<<i); // Assert current bit
+            wait30us();
+            if (!(GPIO_PORTD_AHB_DATA_R & 1ul))     // If PORTD(0) reads LOW
+                convInput &= ~(uint32_t)1<<i;       // Clear current bit of D/A Converter input
+        }
+
+        displayValue(convInput);
+    }
 }
 
 void configSys(void)
@@ -32,7 +47,7 @@ void configSys(void)
     configTimer();
 }
 
-void displayValue(void)
+void displayValue(unsigned char input)
 {
 
 }
