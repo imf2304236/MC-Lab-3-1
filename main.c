@@ -2,13 +2,15 @@
 #include <math.h>
 #include "tm4c1294ncpdt.h"
 
+#define SYSCLK 16000000
+
 void configSys(void);
 
 void displayValue(unsigned char);
 
 void configTimer(void);
 
-void wait30us(void);
+void waitus(int);
 
 int main(void) {
     unsigned int i;
@@ -23,7 +25,7 @@ int main(void) {
         for (i=7; i!=-1; --i) {
             while (GPIO_PORTD_AHB_DATA_R & 2ul);    // Wait while the Stop button is pressed
             GPIO_PORTK_DATA_R = (convInput | (uint32_t)1<<i); // Assert current bit
-            wait30us();
+            waitus(30);
             if (!(GPIO_PORTD_AHB_DATA_R & 1ul))     // If PORTD(0) reads LOW
                 convInput &= ~(uint32_t)1<<i;       // Clear current bit of D/A Converter input
         }
@@ -77,11 +79,12 @@ void configTimer(void)
     TIMER0_TAPR_R = 0x00;       // Set Prescaler = 0
     TIMER0_TAMR_R |= 1ul;       // Set One shot mode
     TIMER0_TAMR_R &= ~0x10ul;   // Set Count down, Compare Mode
-    TIMER0_TAILR_R = 480-1;     // Set Interval Load value = 480
 }
 
-void wait30us(void)
+void waitus(int us)
 {
+    TIMER0_TAILR_R = 480-1;     // Set Interval Load value = 480
+    TIMER0_TAILR_R = (uint32_t) ceil(us*1000.0/SYSCLK) - 1;
     TIMER0_CTL_R |= 1ul;            // Enable TIMER0A
     while (!(TIMER0_RIS_R & 1ul));  // Poll TIMER0A Time-Out Interrupt
     TIMER0_RIS_R |= 1ul;            // Clear TIMER0A Time-Out Interrupt
