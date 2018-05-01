@@ -37,8 +37,8 @@ int main(void) {
 
 void configSys(void)
 {
-    SYSCTL_RCGCGPIO_R |= 0x00000E08;            // Enable Ports M, L, K, D
-    while (!(SYSCTL_PRGPIO_R & 0x00000E08ul));  // Wait for Ports Ready flag
+    SYSCTL_RCGCGPIO_R |= 0x00000E04;            // Enable Ports M, L, K, D
+    while (!(SYSCTL_PRGPIO_R & 0x00000E04ul));  // Wait for Ports Ready flag
 
     GPIO_PORTL_DIR_R |= 0x00000007;         // Configure PORTL(2:0) as outputs
     GPIO_PORTM_DIR_R |= 0x000000FF;         // Configure PORTM(7:0) as outputs
