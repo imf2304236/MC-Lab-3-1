@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <math.h>
 #include "tm4c1294ncpdt.h"
 
 void configSys(void);
@@ -9,11 +10,11 @@ void configTimer(void);
 
 void wait30us(void);
 
-void main(void) {
-    int i;
+int main(void) {
+    unsigned int i;
     static unsigned char convInput;
 
-    configSys();
+    configSys();    // Configure Ports & Timer
 
     while(1) {
         convInput = 0;    // Reset D/A Converter input byteword
@@ -27,8 +28,10 @@ void main(void) {
                 convInput &= ~(uint32_t)1<<i;       // Clear current bit of D/A Converter input
         }
 
-        displayValue(convInput);
+        displayValue(convInput);    // Display calculated value on LCD screen
     }
+
+    return 0;
 }
 
 void configSys(void)
@@ -46,12 +49,24 @@ void configSys(void)
     GPIO_PORTD_AHB_DEN_R |= 0x00000003;     // Enable PORTD(1:0)
     GPIO_PORTK_DEN_R |= 0x000000FF;         // Enable PORTK(7:0)
 
-    configTimer();
+    configTimer();      // Configure Timer
 }
 
 void displayValue(unsigned char input)
 {
+    uint32_t digits[4] = {0,0,0,0};                         // Initialize LCD digits array
+    int result = (int) rint(input * (5.0/256) * 1000);      // Calculate result in mV
+    int i;
 
+    for (i=3; i!=-1; --i) {                         // Iterate over LCD digits
+        digits[i] = (uint32_t) (result / (10*i));   // Calculate current digit
+        result = (uint8_t) (result % (10*i));       // Store remainder for next calculation
+    }
+
+    GPIO_PORTL_DATA_R = (GPIO_PORTL_DATA_R & ~1u) | 2u;     // Disable LCD digits 0:1, enable 3:2
+    GPIO_PORTM_DATA_R = digits[3] << 4u | digits[2];        // Output LCD digits 3:2
+    GPIO_PORTL_DATA_R = (GPIO_PORTL_DATA_R & ~2u) | 1u;     // Disable LCD digits 3:2, enable 1:0
+    GPIO_PORTM_DATA_R = digits[1] << 4u | digits[0];        // Output LCD digits 1:0
 }
 
 void configTimer(void)
