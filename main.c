@@ -28,9 +28,8 @@ int main(void) {
             waitus(30);
             if (!(GPIO_PORTD_AHB_DATA_R & 1ul))     // If PORTD(0) reads LOW
                 convInput &= ~(uint32_t)1<<i;       // Clear current bit of D/A Converter input
+            displayValue(convInput);    // Display calculated value on LCD screen
         }
-
-        displayValue(convInput);    // Display calculated value on LCD screen
     }
 
     return 0;
@@ -83,7 +82,7 @@ void configTimer(void)
 
 void waitus(int us)
 {
-    TIMER0_TAILR_R = 480-1;     // Set Interval Load value = 480
+    // Calculate & set Interval Load value
     TIMER0_TAILR_R = (uint32_t) ceil(us*1000.0/SYSCLK) - 1;
     TIMER0_CTL_R |= 1ul;            // Enable TIMER0A
     while (!(TIMER0_RIS_R & 1ul));  // Poll TIMER0A Time-Out Interrupt
